@@ -8,6 +8,7 @@ import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.ipn.HolaSpring.Models.Role;
 import com.ipn.HolaSpring.Models.User;
@@ -47,6 +48,7 @@ public class UserService {
     }
     
     // Register a new user with USER role
+    @Transactional
     public User registerUser(User user) {
         // Encrypt password
         user.setPassword(passwordEncoder.encode(user.getPassword()));
@@ -54,12 +56,14 @@ public class UserService {
         // Assign USER role by default
         Role userRole = roleRepository.findByNombre("ROLE_USER")
                 .orElseThrow(() -> new RuntimeException("Error: Role USER not found"));
+        
         user.addRole(userRole);
         
         return userRepository.save(user);
     }
     
     // Register admin user
+    @Transactional
     public User registerAdmin(User user) {
         // Encrypt password
         user.setPassword(passwordEncoder.encode(user.getPassword()));
@@ -69,18 +73,24 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("Error: Role ADMIN not found"));
         user.addRole(adminRole);
         
+        // También asignar el rol USER
+        Role userRole = roleRepository.findByNombre("ROLE_USER")
+                .orElseThrow(() -> new RuntimeException("Error: Role USER not found"));
+        user.addRole(userRole);
+        
         return userRepository.save(user);
     }
     
-    // Update user
+    // Update user (sin modificar roles)
+    @Transactional
     public User updateUser(User user) {
         User existingUser = userRepository.findById(user.getId())
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + user.getId()));
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + user.getId()));
         
         existingUser.setNombre(user.getNombre());
         existingUser.setEmail(user.getEmail());
         
-        // Only update password if it's provided
+        // Solo actualizar la contraseña si se proporciona
         if (user.getPassword() != null && !user.getPassword().isEmpty()) {
             existingUser.setPassword(passwordEncoder.encode(user.getPassword()));
         }
@@ -88,7 +98,28 @@ public class UserService {
         return userRepository.save(existingUser);
     }
     
+    // Hacer a un usuario administrador
+    @Transactional
+    public void makeUserAdmin(User user) {
+        Role adminRole = roleRepository.findByNombre("ROLE_ADMIN")
+                .orElseThrow(() -> new RuntimeException("Error: Role ADMIN not found"));
+        
+        user.addRole(adminRole);
+        userRepository.save(user);
+    }
+    
+    // Quitar rol de administrador
+    @Transactional
+    public void removeAdminRole(User user) {
+        Role adminRole = roleRepository.findByNombre("ROLE_ADMIN")
+                .orElseThrow(() -> new RuntimeException("Error: Role ADMIN not found"));
+        
+        user.getRoles().removeIf(role -> role.getNombre().equals("ROLE_ADMIN"));
+        userRepository.save(user);
+    }
+    
     // Delete user
+    @Transactional
     public void deleteUser(Long id) {
         userRepository.deleteById(id);
     }

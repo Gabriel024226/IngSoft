@@ -81,10 +81,30 @@ public class AdminUserController {
     @PostMapping("/users/edit/{id}")
     public String updateUser(@PathVariable Long id, 
                             @ModelAttribute User user,
+                            @RequestParam(required = false) boolean isAdmin,
                             RedirectAttributes redirectAttributes) {
         try {
-            user.setId(id);
-            userService.updateUser(user);
+            User existingUser = userService.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + id));
+            
+            // Actualizar datos básicos
+            existingUser.setNombre(user.getNombre());
+            existingUser.setEmail(user.getEmail());
+            
+            // Actualizar contraseña solo si se proporciona
+            if (user.getPassword() != null && !user.getPassword().isEmpty()) {
+                existingUser.setPassword(user.getPassword());
+            }
+            
+            // Actualizar roles según la casilla de verificación
+            boolean wasAdmin = userService.isAdmin(existingUser.getEmail());
+            if (isAdmin && !wasAdmin) {
+                userService.makeUserAdmin(existingUser);
+            } else if (!isAdmin && wasAdmin) {
+                userService.removeAdminRole(existingUser);
+            }
+            
+            userService.updateUser(existingUser);
             
             redirectAttributes.addFlashAttribute("success", "Usuario actualizado exitosamente");
             return "redirect:/admin/users";
