@@ -4,16 +4,21 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class MySQLController {
 
-    // Parámetros de conexión
-    private static final String URL = "jdbc:mysql://localhost:3306/tarea2?useSSL=false&serverTimezone=UTC";
-    private static final String USER = "admin"; // Usar el nuevo usuario 'admin'
-    private static final String PASSWORD = "admin"; // Contraseña 'admin'
+    @Value("${spring.datasource.url}")
+    private String url;
+    
+    @Value("${spring.datasource.username}")
+    private String user;
+    
+    @Value("${spring.datasource.password}")
+    private String password;
 
     @GetMapping("/testdb")
     public String testDatabaseConnection() {
@@ -22,7 +27,7 @@ public class MySQLController {
 
         try {
             // Conectar a la base de datos
-            connection = DriverManager.getConnection(URL, USER, PASSWORD);
+            connection = DriverManager.getConnection(url, user, password);
             result.append("Conexión exitosa a la base de datos MySQL\n");
 
         } catch (SQLException e) {

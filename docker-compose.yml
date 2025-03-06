@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  # Servicio de MySQL
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: tarea2
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: admin
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - spring-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "admin", "-padmin"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Servicio de la aplicación Spring Boot
+  spring-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: holaspring-app
+    restart: always
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/tarea2?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=admin
+    networks:
+      - spring-network
+
+volumes:
+  mysql-data:
+
+networks:
+  spring-network:
+    driver: bridge

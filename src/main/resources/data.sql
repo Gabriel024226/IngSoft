@@ -5,7 +5,7 @@ INSERT IGNORE INTO roles (nombre) VALUES ('ROLE_USER');
 -- Insertar un usuario administrador por defecto (solo si no existe)
 -- Contraseña: admin123 (encriptada con BCrypt)
 INSERT INTO usuarios (nombre, email, password) 
-SELECT 'Administrador', 'admin@sistema.com', '$2a$10$9OBQoGUBZiSsCKg7vUaX0eKFs21QJZlJ9Ssrw5xqcX7QJeGHxUBsy'
+SELECT 'Administrador', 'admin@sistema.com', 'admin123'
 FROM dual
 WHERE NOT EXISTS (SELECT * FROM usuarios WHERE email = 'admin@sistema.com');
 
@@ -32,7 +32,7 @@ AND NOT EXISTS (
 -- Insertar un usuario regular por defecto (solo si no existe)
 -- Contraseña: user123 (encriptada con BCrypt)
 INSERT INTO usuarios (nombre, email, password) 
-SELECT 'Usuario', 'user@sistema.com', '$2a$10$GdJTzW0WkfAmkRxBu1WWx.uQTvC0gNZ//iR9XP8b/n6LHQu1t/i4i'
+SELECT 'Usuario', 'user@sistema.com', 'user123'
 FROM dual
 WHERE NOT EXISTS (SELECT * FROM usuarios WHERE email = 'user@sistema.com');
 
